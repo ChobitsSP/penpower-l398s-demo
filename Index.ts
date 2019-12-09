@@ -156,13 +156,15 @@ export function GetImg(base64: string) {
 
 export function GetStatusSource(vm: vm) {
   const source$ = Observable.interval(1e3)
-    .takeWhile(_ => vm.isPolling)
-    .switchMap(_ =>
-      Observable.fromPromise(GetStatus()).catch(error => Observable.of("-1"))
+    .filter(_ => vm.isPolling)
+    .concatMap(_ =>
+      Observable.fromPromise(GetStatus())
+        .catch(error => Observable.of("-1"))
+        .delay(500)
     )
     .map(t => parseInt(t, 10))
-    .filter(t => t !== -1)
     .distinctUntilChanged()
+    .filter(t => t !== -1)
     .share();
 
   return GetWindowActiveSource(source$);
